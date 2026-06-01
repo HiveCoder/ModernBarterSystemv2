@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Marketplace — SilkTrade{% endblock %}
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container d-flex align-items-center justify-content-between">
+    <div>
+      <h1 class="page-header-title"><i class="fa fa-store text-primary"></i> Marketplace</h1>
+      <p class="page-header-subtitle mb-0">Discover items to swap, buy, or receive free</p>
+    </div>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('items.new_item') }}" class="btn btn-primary"><i class="fa fa-plus me-1"></i> List Item</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container">
+  <div class="marketplace-layout">
+
+    <!-- Sidebar Filters (Shuup .section-navigation pattern) -->
+    <aside>
+      <div class="sidebar-filter">
+        <div class="sidebar-filter-header">
+          <i class="fa fa-sliders"></i> Filters
+        </div>
+        <form method="GET" action="{{ url_for('main.marketplace') }}" id="filterForm">
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Search</div>
+            <input type="text" name="q" value="{{ q or '' }}" placeholder="Keywords…" class="form-control"/>
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Category</div>
+            <select name="category" class="form-select">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Condition</div>
+            <select name="condition" class="form-select">
+              <option value="">Any Condition</option>
+              <option value="new" {% if condition=='new' %}selected{% endif %}>New</option>
+              <option value="like_new" {% if condition=='like_new' %}selected{% endif %}>Like New</option>
+              <option value="good" {% if condition=='good' %}selected{% endif %}>Good</option>
+              <option value="fair" {% if condition=='fair' %}selected{% endif %}>Fair</option>
+              <option value="poor" {% if condition=='poor' %}selected{% endif %}>Poor</option>
+            </select>
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Trade Type</div>
+            <select name="trade_type" class="form-select">
+              <option value="">All Types</option>
+              <option value="trade" {% if trade_type=='trade' %}selected{% endif %}>Swap / Trade</option>
+              <option value="sell" {% if trade_type=='sell' %}selected{% endif %}>Sell / Buy</option>
+              <option value="gift" {% if trade_type=='gift' %}selected{% endif %}>Free / Gift</option>
+            </select>
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Location</div>
+            <input type="text" name="location" value="{{ location or '' }}" placeholder="City or region…" class="form-control"/>
+          </div>
+
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Est. Value ($)</div>
+            <div class="d-flex gap-2">
+              <input type="number" name="min_val" value="{{ min_val or '' }}" placeholder="Min" min="0" class="form-control"/>
+              <input type="number" name="max_val" value="{{ max_val or '' }}" placeholder="Max" min="0" class="form-control"/>
+            </div>
+          </div>
+
+          <div class="sidebar-section">
+            <button type="submit" class="filter-btn"><i class="fa fa-check me-1"></i>Apply Filters</button>
+            <a href="{{ url_for('main.marketplace') }}" class="btn btn-outline-secondary w-100 mt-2" style="font-size:1.3rem;">Clear All</a>
+          </div>
+        </form>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div>
+      <!-- Sort bar (Shuup-style toolbar) -->
+      <div class="sort-bar">
+        <span class="result-count">
+          <strong>{{ items.total }}</strong> item{% if items.total != 1 %}s{% endif %} found
+          {% if q %} for "<em>{{ q }}</em>"{% endif %}
+        </span>
+        <div class="d-flex align-items-center gap-2">
+          <label class="mb-0" style="font-size:1.3rem;">Sort:</label>
+          <select class="sort-select form-select" onchange="applySort(this.value)">
+            <option value="newest" {% if sort=='newest' %}selected{% endif %}>Newest</option>
+            <option value="oldest" {% if sort=='oldest' %}selected{% endif %}>Oldest</option>
+            <option value="value_high" {% if sort=='value_high' %}selected{% endif %}>Value: High</option>
+            <option value="value_low" {% if sort=='value_low' %}selected{% endif %}>Value: Low</option>
+            <option value="views" {% if sort=='views' %}selected{% endif %}>Most Viewed</option>
+            <option value="wishlist" {% if sort=='wishlist' %}selected{% endif %}>Most Wishlisted</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Items grid -->
+      {% if items.items %}
+      <div class="items-grid">
+        {% for item in items.items %}
+          {% include "partials/item_card.html" %}
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if items.pages > 1 %}
+      <div class="pagination-wrapper">
+        <nav>
+          <ul class="pagination">
+            {% if items.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('main.marketplace', page=items.prev_num, q=q, category=category_id, condition=condition, trade_type=trade_type, location=location, sort=sort) }}">&laquo;</a></li>
+            {% endif %}
+            {% for p in items.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+              {% if p %}
+              <li class="page-item {% if p == items.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('main.marketplace', page=p, q=q, category=category_id, condition=condition, trade_type=trade_type, location=location, sort=sort) }}">{{ p }}</a>
+              </li>
+              {% else %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+              {% endif %}
+            {% endfor %}
+            {% if items.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('main.marketplace', page=items.next_num, q=q, category=category_id, condition=condition, trade_type=trade_type, location=location, sort=sort) }}">&raquo;</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="empty-state">
+        <i class="fa fa-box-open"></i>
+        <h4>No items match your filters</h4>
+        <p>Try broadening your search or <a href="{{ url_for('main.marketplace') }}">clear all filters</a>.</p>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function applySort(val) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('sort', val);
+  url.searchParams.set('page', '1');
+  window.location.href = url.toString();
+}
+</script>
+{% endblock %}

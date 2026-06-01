@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Create Account — SilkTrade{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div class="auth-card">
+          <div class="row g-0">
+            <!-- Brand panel -->
+            <div class="col-md-5 auth-panel">
+              <div class="auth-panel-title"><i class="fa fa-route"></i> SilkTrade</div>
+              <p class="auth-panel-subtitle">Join the modern Silk Road — trade goods, skills, and stories worldwide.</p>
+              <ul class="auth-feature-list">
+                <li><i class="fa fa-check-circle"></i> Free to join, always</li>
+                <li><i class="fa fa-check-circle"></i> No cash required</li>
+                <li><i class="fa fa-check-circle"></i> Trusted, rated traders</li>
+                <li><i class="fa fa-check-circle"></i> Earn trade credits on each deal</li>
+              </ul>
+            </div>
+            <!-- Form pane -->
+            <div class="col-md-7 auth-form-pane">
+              <h2 class="auth-form-title">Create Account</h2>
+              <p class="auth-form-sub">Already a member? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+              <form method="POST">
+                <div class="mb-3">
+                  <label class="form-label">Username</label>
+                  <input type="text" name="username" class="form-control" placeholder="silktrader42" required minlength="3" maxlength="30"/>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Display Name</label>
+                  <input type="text" name="display_name" class="form-control" placeholder="Your public name" maxlength="60"/>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" name="email" class="form-control" placeholder="you@example.com" required/>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Password</label>
+                  <div class="input-group">
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Minimum 8 characters" required minlength="8"/>
+                    <button type="button" class="btn btn-outline-secondary" onclick="togglePwd('password')"><i class="fa fa-eye"></i></button>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label class="form-label">Confirm Password</label>
+                  <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required/>
+                </div>
+                <button type="submit" class="btn-auth">Create Account</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function togglePwd(id) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+</script>
+{% endblock %}

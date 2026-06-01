@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}My Wishlist — SilkTrade{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header"><h1><i class="fa-solid fa-heart"></i> My Wishlist</h1></div>
+  {% if wishlist %}
+  <div class="items-grid">
+    {% for w in wishlist %}
+    {% set item = w.item %}
+    {% include 'partials/item_card.html' %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fa-regular fa-heart"></i>
+    <h3>Your wishlist is empty.</h3>
+    <p>Browse the marketplace and heart items you love.</p>
+    <a href="{{ url_for('main.marketplace') }}" class="btn btn-primary">Browse Marketplace</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

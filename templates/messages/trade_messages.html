@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}{{ offer.sender.display_name }} ↔ {{ offer.receiver.display_name }} — Messages{% endblock %}
+{% block content %}
+<div class="container message-layout">
+  <div class="message-header">
+    <a href="{{ url_for('trades.offer_detail', offer_id=offer.id) }}" class="back-link">
+      <i class="fa-solid fa-arrow-left"></i> Back to Trade #{{ offer.id }}
+    </a>
+    <h2>Trade Chat</h2>
+    <span class="trade-status status-{{ offer.status }}">{{ offer.status.title() }}</span>
+  </div>
+
+  <!-- Trade context mini -->
+  <div class="trade-context-mini">
+    <img src="{{ url_for('static', filename='uploads/' + offer.offered_item.primary_image) }}" alt=""/>
+    <span>{{ offer.offered_item.title[:25] }}</span>
+    <i class="fa-solid fa-arrows-rotate"></i>
+    <img src="{{ url_for('static', filename='uploads/' + offer.requested_item.primary_image) }}" alt=""/>
+    <span>{{ offer.requested_item.title[:25] }}</span>
+  </div>
+
+  <div class="messages-thread" id="messageThread">
+    {% for msg in messages %}
+    <div class="message-bubble {% if msg.sender_id == current_user.id %}mine{% else %}theirs{% endif %}">
+      <img src="{{ url_for('static', filename='uploads/' + msg.author.avatar) }}" alt=""/>
+      <div class="bubble-body">
+        <div class="bubble-meta">
+          <span class="bubble-name">{{ msg.author.display_name }}</span>
+          <span class="bubble-time">{{ msg.created_at.strftime('%b %d, %H:%M') }}</span>
+        </div>
+        <div class="bubble-text">{{ msg.body }}</div>
+      </div>
+    </div>
+    {% endfor %}
+    {% if not messages %}
+    <div class="empty-messages">
+      <i class="fa-regular fa-comment-dots"></i>
+      <p>No messages yet. Start the conversation!</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if offer.status in ('pending', 'accepted') %}
+  <form method="POST" class="message-form">
+    <textarea name="body" rows="2" placeholder="Type a message…" required id="msgInput"></textarea>
+    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+  </form>
+  {% else %}
+  <div class="alert alert-info">This trade is {{ offer.status }}. Messaging is closed.</div>
+  {% endif %}
+</div>
+
+<script>
+  const thread = document.getElementById('messageThread');
+  if (thread) thread.scrollTop = thread.scrollHeight;
+
+  const msgInput = document.getElementById('msgInput');
+  if (msgInput) {
+    msgInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.closest('form').submit();
+      }
+    });
+  }
+</script>
+{% endblock %}

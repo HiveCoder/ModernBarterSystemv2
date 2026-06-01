@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}How It Works — SilkTrade{% endblock %}
+{% block content %}
+<div class="container how-page">
+  <div class="page-header center">
+    <h1>How SilkTrade Works</h1>
+    <p>Trade without cash. Build reputation. Grow your network.</p>
+  </div>
+
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-step-icon"><i class="fa-solid fa-user-plus"></i></div>
+      <h3>1. Create Your Profile</h3>
+      <p>Sign up for free. Add a photo, bio, and location so traders know who they're dealing with. Verified traders get a badge.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-step-icon"><i class="fa-solid fa-camera"></i></div>
+      <h3>2. List Your Items</h3>
+      <p>Upload photos, describe the item's condition and estimated value, and specify what you want in return — or leave it open to offers.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-step-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <h3>3. Browse & Discover</h3>
+      <p>Search by category, condition, location, value range, and more. Save items to your wishlist to keep track of what interests you.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-step-icon"><i class="fa-solid fa-paper-plane"></i></div>
+      <h3>4. Make an Offer</h3>
+      <p>Found something you want? Select one of your listed items and send a trade offer with a personal message to the seller.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-step-icon"><i class="fa-solid fa-comments"></i></div>
+      <h3>5. Negotiate & Chat</h3>
+      <p>Each trade has a dedicated chat. Discuss details, agree on exchange logistics, and get to know your trading partner.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-step-icon"><i class="fa-solid fa-star"></i></div>
+      <h3>6. Complete & Review</h3>
+      <p>Once both parties are happy, mark the trade as complete. Earn 10 Trade Credits and leave a review to build your reputation.</p>
+    </div>
+  </div>
+
+  <div class="credits-explainer">
+    <i class="fa-solid fa-coins"></i>
+    <div>
+      <h3>Trade Credits System</h3>
+      <p>Earn 10 credits for every completed trade. Credits reflect your experience and trustworthiness on the platform. The more you trade, the higher you climb the leaderboard.</p>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    {% if not current_user.is_authenticated %}
+    <h2>Ready to start trading?</h2>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Join SilkTrade Free</a>
+    {% else %}
+    <h2>What are you waiting for?</h2>
+    <a href="{{ url_for('items.new_item') }}" class="btn btn-primary btn-lg">List Your First Item</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

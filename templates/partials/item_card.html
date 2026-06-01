@@ -1,0 +1,39 @@
+<div class="product-card">
+  <div class="card-image">
+    <div class="product-badge">
+      {% if item.is_featured %}<span class="badge-featured"><i class="fa fa-star"></i> Featured</span>{% endif %}
+      <span class="badge-trade-type badge-{{ item.trade_type }}">
+        {% if item.trade_type == 'trade' %}Swap
+        {% elif item.trade_type == 'sell' %}Sell
+        {% elif item.trade_type == 'gift' %}Free
+        {% else %}Open{% endif %}
+      </span>
+    </div>
+    <a href="{{ url_for('items.item_detail', item_id=item.id) }}">
+      <img src="{{ url_for('static', filename='uploads/' + item.primary_image) }}" alt="{{ item.title }}" loading="lazy"/>
+    </a>
+    {% if current_user.is_authenticated and item.owner_id != current_user.id %}
+    <button class="wishlist-btn {% if is_wishlisted is defined and is_wishlisted %}wishlisted{% endif %}"
+            data-item-id="{{ item.id }}" onclick="event.preventDefault(); toggleWishlist(this)">
+      <i class="fa-{% if is_wishlisted is defined and is_wishlisted %}solid{% else %}regular{% endif %} fa-heart"></i>
+    </button>
+    {% endif %}
+  </div>
+  <a href="{{ url_for('items.item_detail', item_id=item.id) }}" class="card-body">
+    <div class="card-name">{{ item.title }}</div>
+    <div class="card-meta">
+      {% if item.category %}<span><i class="fa fa-tag"></i> {{ item.category.name }}</span>{% endif %}
+      <span><i class="fa fa-location-dot"></i> {{ item.location or 'Anywhere' }}</span>
+    </div>
+    {% if item.estimated_value %}
+    <div class="card-price">~${{ "%.0f"|format(item.estimated_value) }} <small>est. value</small></div>
+    {% endif %}
+  </a>
+  <div class="card-actions">
+    <div class="card-owner">
+      <img src="{{ url_for('static', filename='uploads/' + item.owner.avatar) }}" alt=""/>
+      {{ item.owner.display_name }}
+    </div>
+    <span><i class="fa-regular fa-eye"></i> {{ item.view_count }}</span>
+  </div>
+</div>

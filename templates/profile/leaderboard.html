@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard — SilkTrade{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1><i class="fa-solid fa-trophy"></i> Top Traders</h1>
+    <p>The most active members of our trading community</p>
+  </div>
+  <div class="leaderboard">
+    {% for user in traders %}
+    <div class="lb-row {% if loop.index <= 3 %}lb-top-{{ loop.index }}{% endif %}">
+      <div class="lb-rank">
+        {% if loop.index == 1 %}<i class="fa-solid fa-crown" style="color:#FFD700"></i>
+        {% elif loop.index == 2 %}<i class="fa-solid fa-medal" style="color:#C0C0C0"></i>
+        {% elif loop.index == 3 %}<i class="fa-solid fa-medal" style="color:#CD7F32"></i>
+        {% else %}<span>#{{ loop.index }}</span>{% endif %}
+      </div>
+      <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" alt="" class="lb-avatar"/>
+      <div class="lb-info">
+        <a href="{{ url_for('profile.user_profile', username=user.username) }}">{{ user.display_name }}</a>
+        {% if user.location %}<span><i class="fa-solid fa-location-dot"></i> {{ user.location }}</span>{% endif %}
+      </div>
+      <div class="lb-stats">
+        <span><i class="fa-solid fa-handshake"></i> {{ user.trade_count }} trades</span>
+        {% if user.average_rating %}
+        <span>
+          {% for i in range(5) %}<i class="fa-{% if i < user.average_rating|int %}solid{% else %}regular{% endif %} fa-star"></i>{% endfor %}
+          {{ user.average_rating }}
+        </span>
+        {% endif %}
+        <span><i class="fa-solid fa-coins"></i> {{ user.trade_credits }} credits</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

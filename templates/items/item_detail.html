@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block title %}{{ item.title }} — SilkTrade{% endblock %}
+{% block content %}
+<div class="container item-detail-layout">
+
+  <!-- Gallery -->
+  <div class="item-gallery">
+    <div class="gallery-main">
+      <img id="mainImg" src="{{ url_for('static', filename='uploads/' + item.primary_image) }}" alt="{{ item.title }}"/>
+    </div>
+    {% set all_images = item.images.all() %}
+    {% if all_images|length > 1 %}
+    <div class="gallery-thumbs">
+      {% for img in all_images %}
+      <img src="{{ url_for('static', filename='uploads/' + img.filename) }}"
+           onclick="document.getElementById('mainImg').src=this.src"
+           class="thumb {% if img.is_primary %}active{% endif %}" alt=""/>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Details -->
+  <div class="item-details">
+    <div class="item-breadcrumb">
+      <a href="{{ url_for('main.marketplace') }}">Marketplace</a>
+      {% if item.category %}
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="{{ url_for('main.marketplace', category=item.category_id) }}">{{ item.category.name }}</a>
+      {% endif %}
+    </div>
+
+    <h1 class="item-title">{{ item.title }}</h1>
+
+    <div class="item-meta-row">
+      <span class="badge badge-condition badge-{{ item.condition }}">{{ item.condition.replace('_',' ').title() }}</span>
+      <span class="trade-type trade-type-{{ item.trade_type }}">
+        {% if item.trade_type == 'trade' %}<i class="fa-solid fa-arrows-rotate"></i> Trade
+        {% elif item.trade_type == 'sell' %}<i class="fa-solid fa-tag"></i> Sell
+        {% else %}<i class="fa-solid fa-gift"></i> Gift{% endif %}
+      </span>
+      {% if item.estimated_value %}
+      <span class="item-value-large">~${{ "%.2f"|format(item.estimated_value) }}</span>
+      {% endif %}
+    </div>
+
+    <div class="item-description">
+      <h3>Description</h3>
+      <p>{{ item.description }}</p>
+    </div>
+
+    {% if item.looking_for %}
+    <div class="looking-for-box">
+      <i class="fa-solid fa-arrows-rotate"></i>
+      <div>
+        <strong>Looking for:</strong>
+        <p>{{ item.looking_for }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Tags -->
+    {% set tags = item.tags.all() %}
+    {% if tags %}
+    <div class="item-tags">
+      {% for t in tags %}
+      <a href="{{ url_for('main.marketplace', q=t.tag) }}" class="tag">#{{ t.tag }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="item-info-grid">
+      {% if item.location %}
+      <div class="info-pill"><i class="fa-solid fa-location-dot"></i> {{ item.location }}</div>
+      {% endif %}
+      <div class="info-pill"><i class="fa-regular fa-eye"></i> {{ item.view_count }} views</div>
+      <div class="info-pill"><i class="fa-regular fa-heart"></i> <span id="wishCount">{{ item.wishlist_count }}</span> wishlists</div>
+      <div class="info-pill"><i class="fa-regular fa-clock"></i> {{ item.created_at.strftime('%b %d, %Y') }}</div>
+    </div>
+
+    <!-- Owner -->
+    <div class="owner-card">
+      <img src="{{ url_for('static', filename='uploads/' + item.owner.avatar) }}" alt=""/>
+      <div class="owner-info">
+        <a href="{{ url_for('profile.user_profile', username=item.owner.username) }}" class="owner-name">
+          {{ item.owner.display_name }}
+          {% if item.owner.is_verified %}<i class="fa-solid fa-circle-check verified"></i>{% endif %}
+        </a>
+        <div class="owner-stats">
+          <span>{{ item.owner.trade_count }} trades</span>
+          {% if item.owner.average_rating %}
+          <span>
+            {% for i in range(5) %}
+              <i class="fa-{% if i < item.owner.average_rating|int %}solid{% else %}regular{% endif %} fa-star"></i>
+            {% endfor %}
+            {{ item.owner.average_rating }}
+          </span>
+          {% endif %}
+          {% if item.owner.location %}<span><i class="fa-solid fa-location-dot"></i> {{ item.owner.location }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="item-actions">
+      {% if current_user.is_authenticated %}
+        {% if item.owner_id == current_user.id %}
+          <a href="{{ url_for('items.edit_item', item_id=item.id) }}" class="btn btn-primary">
+            <i class="fa-solid fa-pen"></i> Edit Item
+          </a>
+          <form method="POST" action="{{ url_for('items.delete_item', item_id=item.id) }}" onsubmit="return confirm('Delete this item?')">
+            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
+          </form>
+        {% elif item.is_available %}
+          <a href="{{ url_for('trades.make_offer', item_id=item.id) }}" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-handshake"></i> Make Trade Offer
+          </a>
+          <button class="btn btn-outline wishlist-btn-detail {% if is_wishlisted %}wishlisted{% endif %}"
+                  onclick="toggleWishlistDetail({{ item.id }}, this)" id="wishBtn">
+            <i class="fa-{% if is_wishlisted %}solid{% else %}regular{% endif %} fa-heart"></i>
+            {% if is_wishlisted %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}
+          </button>
+        {% else %}
+          <div class="alert alert-info">This item is no longer available for trade.</div>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Login to Trade</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Similar Items -->
+{% if similar_items %}
+<section class="section">
+  <div class="container">
+    <div class="section-header"><h2>Similar Items</h2></div>
+    <div class="items-grid">
+      {% for item in similar_items %}{% include 'partials/item_card.html' %}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<script>
+function toggleWishlistDetail(itemId, btn) {
+  fetch(`/api/wishlist/toggle/${itemId}`, {method:'POST', headers:{'X-CSRFToken': getCookie('csrf_token')}})
+    .then(r => r.json()).then(data => {
+      const icon = btn.querySelector('i');
+      if (data.wishlisted) {
+        icon.className = 'fa-solid fa-heart';
+        btn.innerHTML = '<i class="fa-solid fa-heart"></i> Remove from Wishlist';
+        btn.classList.add('wishlisted');
+      } else {
+        btn.innerHTML = '<i class="fa-regular fa-heart"></i> Add to Wishlist';
+        btn.classList.remove('wishlisted');
+      }
+      document.getElementById('wishCount').textContent = data.count;
+    });
+}
+function getCookie(name) {
+  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return v ? v.pop() : '';
+}
+</script>
+{% endblock %}

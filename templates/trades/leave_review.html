@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Leave a Review — SilkTrade{% endblock %}
+{% block content %}
+<div class="container form-page">
+  <div class="form-card">
+    <div class="form-card-header">
+      <h2><i class="fa-solid fa-star"></i> Leave a Review</h2>
+      <p>How was your trade experience?</p>
+    </div>
+    <form method="POST">
+      <div class="form-group">
+        <label>Rating</label>
+        <div class="star-picker" id="starPicker">
+          {% for i in range(1,6) %}
+          <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" {% if i==5 %}checked{% endif %} hidden/>
+          <label for="star{{ i }}"><i class="fa-solid fa-star"></i></label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="comment">Comment</label>
+        <textarea id="comment" name="comment" rows="4" placeholder="Describe your experience with this trader…"></textarea>
+      </div>
+      <div class="form-actions">
+        <a href="{{ url_for('trades.offer_detail', offer_id=offer.id) }}" class="btn btn-ghost">Skip</a>
+        <button type="submit" class="btn btn-primary btn-lg">Submit Review</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

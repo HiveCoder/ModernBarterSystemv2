@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Make Trade Offer — SilkTrade{% endblock %}
+{% block content %}
+<div class="container form-page">
+  <div class="form-card">
+    <div class="form-card-header">
+      <h2><i class="fa-solid fa-handshake"></i> Propose a Trade</h2>
+      <p>Select one of your items to offer in exchange.</p>
+    </div>
+
+    <!-- The item being requested -->
+    <div class="trade-target-card">
+      <div class="trade-target-label">You want:</div>
+      <div class="trade-item-preview">
+        <img src="{{ url_for('static', filename='uploads/' + requested_item.primary_image) }}" alt=""/>
+        <div>
+          <strong>{{ requested_item.title }}</strong>
+          <span>{{ requested_item.condition.replace('_',' ').title() }}</span>
+          {% if requested_item.estimated_value %}<span>~${{ "%.0f"|format(requested_item.estimated_value) }}</span>{% endif %}
+          <small>by {{ requested_item.owner.display_name }}</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="trade-arrow"><i class="fa-solid fa-arrows-rotate"></i></div>
+
+    <form method="POST">
+      <div class="form-section">
+        <h3>You'll offer:</h3>
+        <div class="my-items-select">
+          {% for my_item in my_items %}
+          <label class="my-item-radio">
+            <input type="radio" name="offered_item_id" value="{{ my_item.id }}" required/>
+            <div class="my-item-card">
+              <img src="{{ url_for('static', filename='uploads/' + my_item.primary_image) }}" alt=""/>
+              <div>
+                <strong>{{ my_item.title }}</strong>
+                <span>{{ my_item.condition.replace('_',' ').title() }}</span>
+                {% if my_item.estimated_value %}<span>~${{ "%.0f"|format(my_item.estimated_value) }}</span>{% endif %}
+              </div>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+        <a href="{{ url_for('items.new_item') }}" class="link-add-item">
+          <i class="fa-solid fa-plus"></i> List another item to offer
+        </a>
+      </div>
+
+      <div class="form-group">
+        <label for="message">Message to {{ requested_item.owner.display_name }}</label>
+        <textarea id="message" name="message" rows="4" placeholder="Introduce yourself and tell them why you're interested in trading…"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('items.item_detail', item_id=requested_item.id) }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-paper-plane"></i> Send Trade Offer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}My Items — SilkTrade{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1><i class="fa-solid fa-boxes-stacked"></i> My Items</h1>
+    <a href="{{ url_for('items.new_item') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> List New Item</a>
+  </div>
+  {% if items %}
+  <div class="my-items-list">
+    {% for item in items %}
+    <div class="my-item-row">
+      <img src="{{ url_for('static', filename='uploads/' + item.primary_image) }}" alt=""/>
+      <div class="my-item-row-info">
+        <a href="{{ url_for('items.item_detail', item_id=item.id) }}" class="my-item-title">{{ item.title }}</a>
+        <div class="my-item-meta">
+          <span class="badge badge-condition badge-{{ item.condition }}">{{ item.condition.replace('_',' ').title() }}</span>
+          <span class="{% if item.is_available %}status-available{% else %}status-unavailable{% endif %}">
+            {% if item.is_available %}Available{% else %}Unavailable{% endif %}
+          </span>
+          <span><i class="fa-regular fa-eye"></i> {{ item.view_count }}</span>
+          <span><i class="fa-regular fa-heart"></i> {{ item.wishlist_count }}</span>
+          <span class="item-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+        </div>
+      </div>
+      <div class="my-item-actions">
+        <a href="{{ url_for('items.edit_item', item_id=item.id) }}" class="btn btn-ghost btn-sm"><i class="fa-solid fa-pen"></i></a>
+        <form method="POST" action="{{ url_for('items.delete_item', item_id=item.id) }}" onsubmit="return confirm('Delete this item?')">
+          <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fa-solid fa-box-open"></i>
+    <h3>You haven't listed any items yet.</h3>
+    <a href="{{ url_for('items.new_item') }}" class="btn btn-primary">List Your First Item</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

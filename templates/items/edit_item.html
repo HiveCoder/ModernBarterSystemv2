@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ item.title }} — SilkTrade{% endblock %}
+{% block content %}
+<div class="container form-page">
+  <div class="form-card">
+    <div class="form-card-header">
+      <h2><i class="fa-solid fa-pen"></i> Edit Item</h2>
+    </div>
+    <form method="POST" enctype="multipart/form-data" class="item-form">
+      <div class="form-section">
+        <h3>Basic Information</h3>
+        <div class="form-group">
+          <label>Item Title *</label>
+          <input type="text" name="title" value="{{ item.title }}" required maxlength="120"/>
+        </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea name="description" rows="5" required>{{ item.description }}</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select name="category_id">
+              <option value="">Select a category</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if item.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Condition *</label>
+            <select name="condition" required>
+              {% for c in ['new','like_new','good','fair','poor'] %}
+              <option value="{{ c }}" {% if item.condition == c %}selected{% endif %}>{{ c.replace('_',' ').title() }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Estimated Value ($)</label>
+            <input type="number" name="estimated_value" value="{{ item.estimated_value or '' }}" min="0" step="0.01"/>
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" name="location" value="{{ item.location or '' }}" placeholder="City, State"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="is_available" {% if item.is_available %}checked{% endif %}/> Available for trade
+          </label>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Trade Preferences</h3>
+        <div class="form-group">
+          <label>Trade Type</label>
+          <div class="radio-group">
+            {% for t in ['trade','sell','gift'] %}
+            <label class="radio-card">
+              <input type="radio" name="trade_type" value="{{ t }}" {% if item.trade_type == t %}checked{% endif %}/>
+              <div>
+                {% if t=='trade' %}<i class="fa-solid fa-arrows-rotate"></i> Trade/Swap
+                {% elif t=='sell' %}<i class="fa-solid fa-tag"></i> Sell/Buy
+                {% else %}<i class="fa-solid fa-gift"></i> Free/Gift{% endif %}
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>What are you looking for in return?</label>
+          <textarea name="looking_for" rows="3">{{ item.looking_for or '' }}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Tags (comma-separated)</label>
+          <input type="text" name="tags" value="{{ item.tags.all()|map(attribute='tag')|join(', ') }}"/>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Add More Photos</h3>
+        {% set existing = item.images.all() %}
+        {% if existing %}
+        <div class="img-preview-grid" style="margin-bottom:16px">
+          {% for img in existing %}
+          <div class="img-thumb"><img src="{{ url_for('static', filename='uploads/' + img.filename) }}" alt=""/></div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div class="drop-zone" id="dropZone">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <p>Drop photos here or <strong>click to browse</strong></p>
+          <input type="file" id="images" name="images" multiple accept=".png,.jpg,.jpeg,.gif,.webp" class="file-input"/>
+        </div>
+        <div id="imgPreview" class="img-preview-grid"></div>
+      </div>
+
+      <div class="form-actions">
+        <a href="{{ url_for('items.item_detail', item_id=item.id) }}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-save"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('images');
+const preview = document.getElementById('imgPreview');
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); fileInput.files = e.dataTransfer.files; updatePreview(); });
+fileInput.addEventListener('change', updatePreview);
+function updatePreview() {
+  preview.innerHTML = '';
+  Array.from(fileInput.files).slice(0,8).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => { const d = document.createElement('div'); d.className='img-thumb'; d.innerHTML=`<img src="${e.target.result}"/>`; preview.appendChild(d); };
+    reader.readAsDataURL(file);
+  });
+}
+</script>
+{% endblock %}

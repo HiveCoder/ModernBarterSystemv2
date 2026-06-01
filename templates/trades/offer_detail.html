@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Trade Offer #{{ offer.id }} — SilkTrade{% endblock %}
+{% block content %}
+<div class="container offer-detail-layout">
+
+  <div class="offer-main">
+    <div class="offer-header">
+      <h2>Trade Offer #{{ offer.id }}</h2>
+      <span class="trade-status status-{{ offer.status }} status-lg">{{ offer.status.title() }}</span>
+    </div>
+
+    <!-- Items being traded -->
+    <div class="trade-exchange-card">
+      <div class="exchange-side">
+        <div class="exchange-label">{{ offer.sender.display_name }} offers:</div>
+        <a href="{{ url_for('items.item_detail', item_id=offer.offered_item.id) }}" class="exchange-item">
+          <img src="{{ url_for('static', filename='uploads/' + offer.offered_item.primary_image) }}" alt=""/>
+          <div>
+            <strong>{{ offer.offered_item.title }}</strong>
+            <span>{{ offer.offered_item.condition.replace('_',' ').title() }}</span>
+            {% if offer.offered_item.estimated_value %}
+            <span>~${{ "%.0f"|format(offer.offered_item.estimated_value) }}</span>
+            {% endif %}
+          </div>
+        </a>
+      </div>
+
+      <div class="exchange-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+
+      <div class="exchange-side">
+        <div class="exchange-label">{{ offer.receiver.display_name }} has:</div>
+        <a href="{{ url_for('items.item_detail', item_id=offer.requested_item.id) }}" class="exchange-item">
+          <img src="{{ url_for('static', filename='uploads/' + offer.requested_item.primary_image) }}" alt=""/>
+          <div>
+            <strong>{{ offer.requested_item.title }}</strong>
+            <span>{{ offer.requested_item.condition.replace('_',' ').title() }}</span>
+            {% if offer.requested_item.estimated_value %}
+            <span>~${{ "%.0f"|format(offer.requested_item.estimated_value) }}</span>
+            {% endif %}
+          </div>
+        </a>
+      </div>
+    </div>
+
+    {% if offer.message %}
+    <div class="offer-message-box">
+      <h4>Message from {{ offer.sender.display_name }}:</h4>
+      <p>{{ offer.message }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="offer-actions">
+      {% if current_user.id == offer.receiver_id and offer.status == 'pending' %}
+      <form method="POST" action="{{ url_for('trades.respond_offer', offer_id=offer.id) }}" class="inline-form">
+        <button name="action" value="accept" class="btn btn-success btn-lg">
+          <i class="fa-solid fa-check"></i> Accept Trade
+        </button>
+        <button name="action" value="decline" class="btn btn-danger" onclick="return confirm('Decline this offer?')">
+          <i class="fa-solid fa-xmark"></i> Decline
+        </button>
+      </form>
+      {% endif %}
+
+      {% if offer.status == 'accepted' and (current_user.id == offer.sender_id or current_user.id == offer.receiver_id) %}
+      <form method="POST" action="{{ url_for('trades.complete_trade', offer_id=offer.id) }}">
+        <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Mark this trade as complete? Both items will be marked unavailable.')">
+          <i class="fa-solid fa-circle-check"></i> Mark as Complete
+        </button>
+      </form>
+      {% endif %}
+
+      {% if offer.status == 'pending' and current_user.id == offer.sender_id %}
+      <form method="POST" action="{{ url_for('trades.cancel_offer', offer_id=offer.id) }}">
+        <button type="submit" class="btn btn-ghost">
+          <i class="fa-solid fa-ban"></i> Cancel Offer
+        </button>
+      </form>
+      {% endif %}
+
+      {% if offer.status == 'completed' %}
+      {% set already_reviewed = offer.messages.count() %}
+      <a href="{{ url_for('trades.leave_review', offer_id=offer.id) }}" class="btn btn-outline">
+        <i class="fa-solid fa-star"></i> Leave a Review
+      </a>
+      {% endif %}
+
+      <a href="{{ url_for('messages.trade_messages', offer_id=offer.id) }}" class="btn btn-ghost">
+        <i class="fa-solid fa-message"></i> Messages
+      </a>
+    </div>
+  </div>
+
+  <!-- Trader info sidebar -->
+  <aside class="offer-sidebar">
+    {% set other = offer.receiver if current_user.id == offer.sender_id else offer.sender %}
+    <div class="sidebar-card">
+      <h4>Trading with</h4>
+      <div class="trader-info">
+        <img src="{{ url_for('static', filename='uploads/' + other.avatar) }}" alt=""/>
+        <div>
+          <a href="{{ url_for('profile.user_profile', username=other.username) }}">{{ other.display_name }}</a>
+          {% if other.average_rating %}
+          <div class="star-rating">
+            {% for i in range(5) %}
+            <i class="fa-{% if i < other.average_rating|int %}solid{% else %}regular{% endif %} fa-star"></i>
+            {% endfor %}
+            {{ other.average_rating }}
+          </div>
+          {% endif %}
+          <span>{{ other.trade_count }} completed trades</span>
+          {% if other.location %}<span><i class="fa-solid fa-location-dot"></i> {{ other.location }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="trade-credits-display">
+        <i class="fa-solid fa-coins"></i> {{ current_user.trade_credits }} Trade Credits
+      </div>
+    </div>
+    <div class="sidebar-card timeline-card">
+      <h4>Timeline</h4>
+      <div class="timeline">
+        <div class="tl-item">
+          <i class="fa-solid fa-circle-dot"></i>
+          <span>Offer sent — {{ offer.created_at.strftime('%b %d, %Y') }}</span>
+        </div>
+        {% if offer.status in ('accepted','completed') %}
+        <div class="tl-item">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Offer accepted</span>
+        </div>
+        {% endif %}
+        {% if offer.completed_at %}
+        <div class="tl-item">
+          <i class="fa-solid fa-trophy"></i>
+          <span>Trade completed — {{ offer.completed_at.strftime('%b %d, %Y') }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

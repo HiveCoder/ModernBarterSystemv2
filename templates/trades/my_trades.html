@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}My Trades — SilkTrade{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div class="container">
+    <h1 class="page-header-title"><i class="fa fa-handshake text-primary"></i> My Trades</h1>
+    <p class="page-header-subtitle mb-0">Manage your trade offers and history</p>
+  </div>
+</div>
+
+<div class="container py-4">
+
+  <!-- Tabs (Shuup-style) -->
+  <div class="trade-tabs">
+    <a href="?tab=received" class="trade-tab-btn {% if tab=='received' %}active{% endif %}">
+      <i class="fa fa-inbox me-1"></i> Received
+      {% set pending_received = received|selectattr('status','eq','pending')|list|length %}
+      {% if pending_received > 0 %}<span class="badge bg-danger ms-1">{{ pending_received }}</span>{% endif %}
+    </a>
+    <a href="?tab=sent" class="trade-tab-btn {% if tab=='sent' %}active{% endif %}">
+      <i class="fa fa-paper-plane me-1"></i> Sent
+    </a>
+    <a href="?tab=completed" class="trade-tab-btn {% if tab=='completed' %}active{% endif %}">
+      <i class="fa fa-check-circle me-1"></i> Completed
+    </a>
+  </div>
+
+  {% set show_list = received if tab == 'received' else sent if tab == 'sent' else (received + sent)|selectattr('status','eq','completed')|list %}
+
+  {% if show_list %}
+  {% for offer in show_list %}
+  {% if tab == 'completed' and offer.status != 'completed' %}{% continue %}{% endif %}
+  <a href="{{ url_for('trades.offer_detail', offer_id=offer.id) }}" class="trade-card d-block text-decoration-none">
+    <div class="trade-exchange">
+      <div class="trade-item-thumb">
+        <img src="{{ url_for('static', filename='uploads/' + offer.offered_item.primary_image) }}" alt=""/>
+        <div>
+          <div style="font-weight:600;font-size:1.3rem;">{{ offer.offered_item.title[:40] }}</div>
+          <small style="color:var(--text-muted);">by {{ offer.sender.display_name }}</small>
+        </div>
+      </div>
+      <div class="trade-arrow"><i class="fa fa-arrows-rotate"></i></div>
+      <div class="trade-item-thumb">
+        <img src="{{ url_for('static', filename='uploads/' + offer.requested_item.primary_image) }}" alt=""/>
+        <div>
+          <div style="font-weight:600;font-size:1.3rem;">{{ offer.requested_item.title[:40] }}</div>
+          <small style="color:var(--text-muted);">by {{ offer.receiver.display_name }}</small>
+        </div>
+      </div>
+      <div class="ms-auto text-end" style="flex-shrink:0;">
+        <div class="trade-status-badge status-{{ offer.status }} mb-1">{{ offer.status.title() }}</div>
+        <div style="font-size:1.2rem;color:var(--text-muted);">{{ offer.created_at.strftime('%b %d, %Y') }}</div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <i class="fa fa-handshake"></i>
+    <h4>No trades here yet</h4>
+    <p><a href="{{ url_for('main.marketplace') }}">Browse the marketplace</a> to find something to trade for.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
