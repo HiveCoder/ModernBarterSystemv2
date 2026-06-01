@@ -34,6 +34,7 @@ def create_app():
     with app.app_context():
         db.create_all()
         _seed_categories()
+        _seed_sample_data()
 
     return app
 
@@ -66,3 +67,15 @@ def _seed_categories():
 if __name__ == '__main__':
     app = create_app()
     app.run(debug=True)
+
+
+def _seed_sample_data():
+    """Auto-seed sample items/users on a fresh database."""
+    from models import Item
+    if Item.query.count() == 0:
+        try:
+            from seed_data import run as seed_run
+            seed_run()
+        except Exception as e:
+            import sys
+            print(f"[seed] Warning: could not seed sample data: {e}", file=sys.stderr)

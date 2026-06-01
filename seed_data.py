@@ -9,14 +9,11 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from app import create_app
 from extensions import db
 from models import User, Category, Item, ItemImage, ItemTag, TradeOffer, Review
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
 import random
-
-app = create_app()
 
 USERS = [
     dict(username="marco_polo",  email="marco@silktrade.com",  display_name="Marco Polo",
@@ -411,129 +408,132 @@ ITEMS = [
 ]
 
 def run():
-    with app.app_context():
-        # Skip if we already have a lot of items
-        from models import Item
-        if Item.query.count() > 20:
-            print(f"Database already has {Item.query.count()} items. Skipping seed.")
-            return
+    # Skip if we already have a lot of items
+    from models import Item
+    if Item.query.count() > 20:
+        print(f"Database already has {Item.query.count()} items. Skipping seed.")
+        return
 
-        print("Creating users...")
-        users = []
-        pw_hash = generate_password_hash("Password123!")
-        for u in USERS:
-            existing = User.query.filter_by(username=u["username"]).first()
-            if existing:
-                users.append(existing)
-                continue
-            user = User(
-                username=u["username"],
-                email=u["email"],
-                password_hash=pw_hash,
-                display_name=u["display_name"],
-                bio=u["bio"],
-                location=u["location"],
-                avatar="default_avatar.png",
-                is_verified=u["is_verified"],
-                trade_credits=u["trade_credits"],
-                created_at=datetime.utcnow() - timedelta(days=random.randint(30, 365)),
-            )
-            db.session.add(user)
-            users.append(user)
-        db.session.commit()
-        print(f"  {len(users)} users ready.")
+    print("Creating users...")
+    users = []
+    pw_hash = generate_password_hash("Password123!")
+    for u in USERS:
+        existing = User.query.filter_by(username=u["username"]).first()
+        if existing:
+            users.append(existing)
+            continue
+        user = User(
+            username=u["username"],
+            email=u["email"],
+            password_hash=pw_hash,
+            display_name=u["display_name"],
+            bio=u["bio"],
+            location=u["location"],
+            avatar="default_avatar.png",
+            is_verified=u["is_verified"],
+            trade_credits=u["trade_credits"],
+            created_at=datetime.utcnow() - timedelta(days=random.randint(30, 365)),
+        )
+        db.session.add(user)
+        users.append(user)
+    db.session.commit()
+    print(f"  {len(users)} users ready.")
 
-        # Build category lookup
-        cats = {c.name: c for c in Category.query.all()}
+    # Build category lookup
+    cats = {c.name: c for c in Category.query.all()}
 
-        print(f"Creating {len(ITEMS)} items...")
-        created_items = []
-        for i, (title, desc, cat_name, cond, val, ttype, lf, tags, featured) in enumerate(ITEMS):
-            # Round-robin assign owners
-            owner = users[i % len(users)]
-            cat = cats.get(cat_name)
-            created_at = datetime.utcnow() - timedelta(days=random.randint(1, 180))
+    print(f"Creating {len(ITEMS)} items...")
+    created_items = []
+    for i, (title, desc, cat_name, cond, val, ttype, lf, tags, featured) in enumerate(ITEMS):
+        # Round-robin assign owners
+        owner = users[i % len(users)]
+        cat = cats.get(cat_name)
+        created_at = datetime.utcnow() - timedelta(days=random.randint(1, 180))
 
-            item = Item(
-                title=title,
-                description=desc,
-                condition=cond,
-                estimated_value=val,
-                location=owner.location,
-                is_available=True,
-                is_featured=featured,
-                view_count=random.randint(5, 800),
-                trade_type=ttype,
-                looking_for=lf,
-                owner_id=owner.id,
-                category_id=cat.id if cat else None,
-                created_at=created_at,
-            )
-            db.session.add(item)
-            db.session.flush()  # get item.id
+        item = Item(
+            title=title,
+            description=desc,
+            condition=cond,
+            estimated_value=val,
+            location=owner.location,
+            is_available=True,
+            is_featured=featured,
+            view_count=random.randint(5, 800),
+            trade_type=ttype,
+            looking_for=lf,
+            owner_id=owner.id,
+            category_id=cat.id if cat else None,
+            created_at=created_at,
+        )
+        db.session.add(item)
+        db.session.flush()  # get item.id
 
-            # Primary image placeholder
-            img = ItemImage(item_id=item.id, filename="no_image.png", is_primary=True)
-            db.session.add(img)
+        # Primary image placeholder
+        img = ItemImage(item_id=item.id, filename="no_image.png", is_primary=True)
+        db.session.add(img)
 
-            # Tags
-            for tag in tags:
-                db.session.add(ItemTag(item_id=item.id, tag=tag))
+        # Tags
+        for tag in tags:
+            db.session.add(ItemTag(item_id=item.id, tag=tag))
 
-            created_items.append(item)
+        created_items.append(item)
 
-        db.session.commit()
-        print(f"  {len(created_items)} items created.")
+    db.session.commit()
+    print(f"  {len(created_items)} items created.")
 
-        # Add a few trade offers
-        print("Adding sample trade offers...")
-        if len(created_items) >= 4:
-            offers = [
-                (users[0], users[1], created_items[0], created_items[8]),
-                (users[1], users[2], created_items[9], created_items[19]),
-                (users[2], users[3], created_items[19], created_items[24]),
-                (users[3], users[4], created_items[28], created_items[33]),
-            ]
-            for sender, receiver, off_item, req_item in offers:
-                if sender.id != receiver.id and off_item.owner_id == sender.id:
-                    offer = TradeOffer(
-                        sender_id=sender.id,
-                        receiver_id=receiver.id,
-                        offered_item_id=off_item.id,
-                        requested_item_id=req_item.id,
-                        message="Hey! I'd love to trade. Let me know if you're interested.",
-                        status="pending",
-                        created_at=datetime.utcnow() - timedelta(days=random.randint(1, 14)),
-                    )
-                    db.session.add(offer)
-            db.session.commit()
-            print("  Sample trade offers added.")
-
-        # Add a few reviews
-        print("Adding sample reviews...")
-        review_pairs = [
-            (users[1], users[0], 5, "Marco is a fantastic trader — item exactly as described. Highly recommend!"),
-            (users[0], users[1], 5, "Jade packaged everything perfectly. Super fast response. A+ trader."),
-            (users[2], users[3], 4, "Good experience overall. Item was in great condition."),
-            (users[3], users[2], 5, "Rupert is a gem. Tools were immaculate. Would trade again."),
-            (users[4], users[5], 5, "Anna's artwork is stunning and she's wonderful to deal with."),
+    # Add a few trade offers
+    print("Adding sample trade offers...")
+    if len(created_items) >= 4:
+        offers = [
+            (users[0], users[1], created_items[0], created_items[8]),
+            (users[1], users[2], created_items[9], created_items[19]),
+            (users[2], users[3], created_items[19], created_items[24]),
+            (users[3], users[4], created_items[28], created_items[33]),
         ]
-        for reviewer, reviewed, rating, comment in review_pairs:
-            existing = Review.query.filter_by(reviewer_id=reviewer.id, reviewed_id=reviewed.id).first()
-            if not existing:
-                db.session.add(Review(
-                    reviewer_id=reviewer.id,
-                    reviewed_id=reviewed.id,
-                    rating=rating,
-                    comment=comment,
-                    created_at=datetime.utcnow() - timedelta(days=random.randint(3, 60)),
-                ))
+        for sender, receiver, off_item, req_item in offers:
+            if sender.id != receiver.id and off_item.owner_id == sender.id:
+                offer = TradeOffer(
+                    sender_id=sender.id,
+                    receiver_id=receiver.id,
+                    offered_item_id=off_item.id,
+                    requested_item_id=req_item.id,
+                    message="Hey! I'd love to trade. Let me know if you're interested.",
+                    status="pending",
+                    created_at=datetime.utcnow() - timedelta(days=random.randint(1, 14)),
+                )
+                db.session.add(offer)
         db.session.commit()
-        print("  Sample reviews added.")
+        print("  Sample trade offers added.")
 
-        total_items = Item.query.count()
-        total_users = User.query.count()
-        print(f"\nDone! Database now has {total_users} users and {total_items} items.")
+    # Add a few reviews
+    print("Adding sample reviews...")
+    review_pairs = [
+        (users[1], users[0], 5, "Marco is a fantastic trader — item exactly as described. Highly recommend!"),
+        (users[0], users[1], 5, "Jade packaged everything perfectly. Super fast response. A+ trader."),
+        (users[2], users[3], 4, "Good experience overall. Item was in great condition."),
+        (users[3], users[2], 5, "Rupert is a gem. Tools were immaculate. Would trade again."),
+        (users[4], users[5], 5, "Anna's artwork is stunning and she's wonderful to deal with."),
+    ]
+    for reviewer, reviewed, rating, comment in review_pairs:
+        existing = Review.query.filter_by(reviewer_id=reviewer.id, reviewed_id=reviewed.id).first()
+        if not existing:
+            db.session.add(Review(
+                reviewer_id=reviewer.id,
+                reviewed_id=reviewed.id,
+                rating=rating,
+                comment=comment,
+                created_at=datetime.utcnow() - timedelta(days=random.randint(3, 60)),
+            ))
+    db.session.commit()
+    print("  Sample reviews added.")
+
+    total_items = Item.query.count()
+    total_users = User.query.count()
+    print(f"\nDone! Database now has {total_users} users and {total_items} items.")
+
 
 if __name__ == "__main__":
-    run()
+    from app import create_app
+    app = create_app()
+    with app.app_context():
+        run()
