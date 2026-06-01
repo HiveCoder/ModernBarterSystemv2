@@ -10,7 +10,7 @@
       </span>
     </div>
     <a href="{{ url_for('items.item_detail', item_id=item.id) }}">
-      <img src="{{ url_for('static', filename='uploads/' + item.primary_image) }}" alt="{{ item.title }}" loading="lazy"/>
+      <img src="{{ url_for('static', filename='uploads/' + item.primary_image) }}" alt="{{ item.title }}" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/no_image.png') }}'"/>
     </a>
     {% if current_user.is_authenticated and item.owner_id != current_user.id %}
     <button class="wishlist-btn {% if is_wishlisted is defined and is_wishlisted %}wishlisted{% endif %}"
@@ -31,7 +31,7 @@
   </a>
   <div class="card-actions">
     <div class="card-owner">
-      <img src="{{ url_for('static', filename='uploads/' + item.owner.avatar) }}" alt=""/>
+      <img src="{{ url_for('static', filename='uploads/' + item.owner.avatar) }}" alt="" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/default_avatar.png') }}'"/>
       {{ item.owner.display_name }}
     </div>
     <span><i class="fa-regular fa-eye"></i> {{ item.view_count }}</span>

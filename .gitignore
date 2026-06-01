@@ -10,8 +10,12 @@ __pycache__/
 # Flask instance folder (SQLite DB, local config)
 instance/
 
-# Uploads
-static/uploads/
+# Uploads — keep placeholder images but ignore user-uploaded files
+static/uploads/*
+!static/uploads/*.jpg
+!static/uploads/*.png
+!static/uploads/*.webp
+!static/uploads/.gitkeep
 
 # Virtual environments
 venv/

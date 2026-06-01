@@ -659,6 +659,24 @@ footer { margin-top: auto; }
 .page-header-subtitle { color: var(--text-muted); font-size: 1.4rem; }
 .tag-badge { display: inline-block; background: var(--body-bg); border: 1px solid var(--border-color); color: var(--text-color); font-size: 1.1rem; padding: .2rem .8rem; border-radius: 1.2rem; margin: .2rem; }
 
+/* Image loading shimmer */
+.product-card .card-image img {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+}
+.product-card .card-image img[src$="no_image.png"] {
+  object-fit: contain;
+  padding: 2rem;
+  opacity: .5;
+  filter: grayscale(1);
+}
+
+/* Verified badge */
+.verified-badge { color: var(--brand-primary); font-size: 1.1rem; margin-left: .2rem; }
+
+/* Active filter tag */
+.active-filter { display: inline-flex; align-items: center; gap: .4rem; background: rgba(27,171,149,.12); color: var(--brand-teal-dark); border: 1px solid rgba(27,171,149,.3); padding: .3rem .9rem; border-radius: 1.2rem; font-size: 1.2rem; font-weight: 600; }
+
 /* ====================================================================
    RESPONSIVE
    ==================================================================== */

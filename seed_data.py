@@ -36,6 +36,71 @@ USERS = [
          location="Portland, OR", is_verified=True, trade_credits=290),
 ]
 
+# Image filename mapped per item (index matches ITEMS list)
+ITEM_IMAGES = [
+    "sony_headphones.jpg",   # 0  Sony WH-1000XM5
+    "ipad_pro.jpg",          # 1  iPad Pro
+    "raspberry_pi.jpg",      # 2  Raspberry Pi
+    "rtx_gpu.jpg",           # 3  RTX 3070
+    "dji_drone.jpg",         # 4  DJI Mini 3 Pro
+    "ipod_classic.jpg",      # 5  iPod Classic
+    "mechanical_keyboard.jpg", # 6 Keychron Q1
+    "sony_a7iii.jpg",        # 7  Sony A7III
+    "levis_jeans.jpg",       # 8  Levi's 501
+    "supreme_hoodie.jpg",    # 9  Supreme Hoodie
+    "air_jordan.jpg",        # 10 Air Jordan 1
+    "patagonia_jacket.jpg",  # 11 Patagonia Jacket
+    "band_tees.jpg",         # 12 Band Tees
+    "cdg_cardigan.jpg",      # 13 CDG Cardigan
+    "dune_book.jpg",         # 14 First Ed. Dune
+    "vinyl_records.jpg",     # 15 Vinyl Collection
+    "wot_books.jpg",         # 16 Wheel of Time
+    "ps5_games.jpg",         # 17 PS5 Games
+    "gameboy.jpg",           # 18 Game Boy
+    "dewalt_drill.jpg",      # 19 DeWalt Combo
+    "festool_saw.jpg",       # 20 Festool Track Saw
+    "stanley_planes.jpg",    # 21 Stanley Planes
+    "milwaukee_saw.jpg",     # 22 Milwaukee Circular Saw
+    "bambu_printer.jpg",     # 23 Bambu 3D Printer
+    "trek_mtb.jpg",          # 24 Trek Marlin 7
+    "salomon_boots.jpg",     # 25 Salomon Boots
+    "climbing_gear.jpg",     # 26 Climbing Harness
+    "surfboard.jpg",         # 27 Surfboard
+    "barbell_weights.jpg",   # 28 Gym Equipment
+    "garmin_watch.jpg",      # 29 Garmin Fenix 7X
+    "oil_painting.jpg",      # 30 Oil Painting
+    "katana.jpg",            # 31 Katana
+    "banksy_print.jpg",      # 32 Banksy Print
+    "leica_m3.jpg",          # 33 Leica M3
+    "starwars_cards.jpg",    # 34 Star Wars Lobby Cards
+    "vitamix_blender.jpg",   # 35 Vitamix Blender
+    "ember_mug.jpg",         # 36 Ember Mug
+    "dyson_vacuum.jpg",      # 37 Dyson V15
+    "walnut_table.jpg",      # 38 Walnut Table
+    "weber_grill.jpg",       # 39 Weber Grill
+    "philips_hue.jpg",       # 40 Philips Hue
+    "lego_technic.jpg",      # 41 LEGO Bugatti
+    "twilight_imp.jpg",      # 42 Twilight Imperium
+    "nintendo_switch.jpg",   # 43 Nintendo Switch OLED
+    "transformers_g1.jpg",   # 44 Transformers G1
+    "gloomhaven.jpg",        # 45 Gloomhaven JotL
+    "fender_strat.jpg",      # 46 Fender Stratocaster
+    "roland_piano.jpg",      # 47 Roland FP-90X
+    "sourdough_kit.jpg",     # 48 Sourdough Starter
+    "aroids_plants.jpg",     # 49 Indoor Plants
+    "moroccan_rug.jpg",      # 50 Moroccan Rug
+    "tetsubin_teapot.jpg",   # 51 Tetsubin Teapot
+    "coffee_beans.jpg",      # 52 Coffee Sampler
+    "seiko_watch.jpg",       # 53 Seiko 5 Sports
+    "leather_wallet.jpg",    # 54 Leather Wallet
+    "alpine_tent.jpg",       # 55 Mountain Tent
+    "gravel_bike.jpg",       # 56 Specialized Diverge
+    "nikon_z6.jpg",          # 57 Nikon Z6 II
+    "standing_desk.jpg",     # 58 Standing Desk
+    "apple_watch_ultra.jpg", # 59 Apple Watch Ultra 2
+    "martin_guitar.jpg",     # 60 Martin 000-15M
+]
+
 # (title, description, category_name, condition, value, trade_type, looking_for, tags, featured)
 ITEMS = [
     # --- Electronics ---
@@ -468,8 +533,9 @@ def run():
         db.session.add(item)
         db.session.flush()  # get item.id
 
-        # Primary image placeholder
-        img = ItemImage(item_id=item.id, filename="no_image.png", is_primary=True)
+        # Real product image (falls back to no_image.png if index out of range)
+        img_file = ITEM_IMAGES[i] if i < len(ITEM_IMAGES) else "no_image.png"
+        img = ItemImage(item_id=item.id, filename=img_file, is_primary=True)
         db.session.add(img)
 
         # Tags
